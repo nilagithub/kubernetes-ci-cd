@@ -13,7 +13,7 @@ node {
     env.BUILDIMG=imageName
     
     stage "PreBuild"
-    sh "sudo chmod 666 /var/run/docker.sock"
+    sh "chmod 777 /var/run/docker.sock"
     
     stage "Build"
     
