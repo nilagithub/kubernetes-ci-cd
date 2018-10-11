@@ -12,9 +12,6 @@ node {
     imageName = "${registryHost}${appName}:${tag}"
     env.BUILDIMG=imageName
     
-    stage "PreBuild"
-    sh "chmod 777 /var/run/docker.sock"
-    
     stage "Build"
     
         sh "docker build -t ${imageName} -f applications/hello-kenzan/Dockerfile applications/hello-kenzan"
