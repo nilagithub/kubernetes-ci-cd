@@ -1,15 +1,29 @@
 FROM jenkins/jenkins:2.136
+
+# Running as root to have an easy support for Docker
 USER root
-#Installing Docker
-RUN apt-get update && apt-get install software-properties-common apt-transport-https ca-certificates -y; \
-curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add -;\
-add-apt-repository  "deb [arch=amd64] https://download.docker.com/linux/debian  $(lsb_release -cs) stable";\
-apt-get update && apt-get install docker-ce -y
 
-#Installing kubectl from Docker
-RUN curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -;\
-touch /etc/apt/sources.list.d/kubernetes.list;\
-echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee -a /etc/apt/sources.list.d/kubernetes.list;\
-apt-get update && apt-get install -y kubectl
+# A default admin user
+ENV ADMIN_USER=admin \
+    ADMIN_PASSWORD=password
 
-USER jenkins
+# Jenkins init scripts
+COPY security.groovy /usr/share/jenkins/ref/init.groovy.d/
+
+# Install plugins at Docker image build time
+#COPY plugins.txt /usr/share/jenkins/plugins.txt
+#RUN /usr/local/bin/install-plugins.sh $(cat /usr/share/jenkins/plugins.txt) && \
+ #   mkdir -p /usr/share/jenkins/ref/ && \
+  #  echo lts > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state && \
+   # echo lts > /usr/share/jenkins/ref/jenkins.install.InstallUtil.lastExecVersion
+
+# Install Docker
+RUN apt-get -qq update && \
+    apt-get -qq -y install curl && \
+    curl -sSL https://get.docker.com/ | sh
+
+# Install kubectl and helm
+RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl && \
+    chmod +x ./kubectl && \
+    mv ./kubectl /usr/local/bin/kubectl && \
+    curl https://raw.githubusercontent.com/kubernetes/helm/master/scripts/get | bash
